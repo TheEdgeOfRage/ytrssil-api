@@ -1,0 +1,16 @@
+# Ignore everything and explicitly include the things we need
+*
+.*
+
+!cmd
+!config
+!db
+!handler
+!httpserver
+!lib
+!mocks
+!models
+
+!go.mod
+!go.sum
+!Makefile

@@ -1,0 +1,31 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+debug
+# editor temp files
+*.swp
+*.swo
+*.orig
+
+# Local env files
+*.env
+
+# Build artifacts and cache
+**/bin
+/dist/
+
+# Visual studio code configuration
+.vscode/
+
+# secrets for local use that cannot be encrypted
+k8s/local/patches/core-http-config.yaml
