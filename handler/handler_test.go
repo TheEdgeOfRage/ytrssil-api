@@ -24,10 +24,10 @@ func TestGetNewVideos(t *testing.T) {
 	l := log.NewNopLogger()
 
 	handler := New(l, &db_mock.DBMock{
-		GetNewVideosFunc: func(ctx context.Context, username string) ([]*models.Video, error) {
-			return []*models.Video{
+		GetNewVideosFunc: func(ctx context.Context, username string) ([]models.Video, error) {
+			return []models.Video{
 				{
-					VideoID:       "test",
+					ID:            "test",
 					ChannelName:   "test",
 					Title:         "test",
 					PublishedTime: time.Now(),
@@ -43,7 +43,7 @@ func TestGetNewVideos(t *testing.T) {
 	// Assert
 	if assert.NoError(t, err) {
 		if assert.NotNil(t, resp) {
-			assert.Equal(t, resp[0].VideoID, "test")
+			assert.Equal(t, resp[0].ID, "test")
 			assert.Equal(t, resp[0].Title, "test")
 		}
 	}

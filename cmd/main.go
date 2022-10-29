@@ -33,9 +33,9 @@ func main() {
 		return
 	}
 
-	db, err := db.NewPSQLDB(log, config.DB)
+	db, err := db.NewPostgresDB(log, config.DB)
 	if err != nil {
-		log.Log("level", "FATAL", "call", "db.NewPSQLDB", "error", err)
+		log.Log("level", "FATAL", "call", "db.NewPostgresDB", "error", err)
 		return
 	}
 

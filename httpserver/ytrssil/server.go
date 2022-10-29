@@ -37,12 +37,14 @@ func SetupGinRouter(l log.Logger, handler handler.Handler, authMiddleware func(c
 	}
 	engine.GET("/healthz", srv.Healthz)
 	engine.POST("/register", srv.CreateUser)
+	engine.POST("/fetch", srv.FetchVideos)
 
 	// all APIs go in this routing group and require authentication
 	api := engine.Group("/api")
 	api.Use(authMiddleware)
 	{
 		api.GET("videos/new", srv.GetNewVideos)
+		api.POST("channels/:channel_id/subscribe", srv.SubscribeToChannel)
 	}
 
 	return engine, nil

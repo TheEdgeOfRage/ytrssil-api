@@ -20,14 +20,38 @@ var _ db.DB = &DBMock{}
 //
 //		// make and configure a mocked db.DB
 //		mockedDB := &DBMock{
-//			AuthenticateUserFunc: func(ctx context.Context, username string, password string) (bool, error) {
+//			AddVideoToUserFunc: func(ctx context.Context, username string, videoID string) error {
+//				panic("mock out the AddVideoToUser method")
+//			},
+//			AuthenticateUserFunc: func(ctx context.Context, user models.User) (bool, error) {
 //				panic("mock out the AuthenticateUser method")
+//			},
+//			CreateChannelFunc: func(ctx context.Context, channel models.Channel) error {
+//				panic("mock out the CreateChannel method")
 //			},
 //			CreateUserFunc: func(ctx context.Context, user models.User) error {
 //				panic("mock out the CreateUser method")
 //			},
-//			GetNewVideosFunc: func(ctx context.Context, username string) ([]*models.Video, error) {
+//			CreateVideoFunc: func(ctx context.Context, video models.Video, channelID string) error {
+//				panic("mock out the CreateVideo method")
+//			},
+//			DeleteUserFunc: func(ctx context.Context, username string) error {
+//				panic("mock out the DeleteUser method")
+//			},
+//			GetChannelSubscribersFunc: func(ctx context.Context, channelID string) ([]string, error) {
+//				panic("mock out the GetChannelSubscribers method")
+//			},
+//			GetNewVideosFunc: func(ctx context.Context, username string) ([]models.Video, error) {
 //				panic("mock out the GetNewVideos method")
+//			},
+//			ListChannelsFunc: func(ctx context.Context) ([]models.Channel, error) {
+//				panic("mock out the ListChannels method")
+//			},
+//			SubscribeUserToChannelFunc: func(ctx context.Context, username string, channelID string) error {
+//				panic("mock out the SubscribeUserToChannel method")
+//			},
+//			WatchVideoFunc: func(ctx context.Context, username string, videoID string) error {
+//				panic("mock out the WatchVideo method")
 //			},
 //		}
 //
@@ -36,25 +60,63 @@ var _ db.DB = &DBMock{}
 //
 //	}
 type DBMock struct {
+	// AddVideoToUserFunc mocks the AddVideoToUser method.
+	AddVideoToUserFunc func(ctx context.Context, username string, videoID string) error
+
 	// AuthenticateUserFunc mocks the AuthenticateUser method.
-	AuthenticateUserFunc func(ctx context.Context, username string, password string) (bool, error)
+	AuthenticateUserFunc func(ctx context.Context, user models.User) (bool, error)
+
+	// CreateChannelFunc mocks the CreateChannel method.
+	CreateChannelFunc func(ctx context.Context, channel models.Channel) error
 
 	// CreateUserFunc mocks the CreateUser method.
 	CreateUserFunc func(ctx context.Context, user models.User) error
 
+	// CreateVideoFunc mocks the CreateVideo method.
+	CreateVideoFunc func(ctx context.Context, video models.Video, channelID string) error
+
+	// DeleteUserFunc mocks the DeleteUser method.
+	DeleteUserFunc func(ctx context.Context, username string) error
+
+	// GetChannelSubscribersFunc mocks the GetChannelSubscribers method.
+	GetChannelSubscribersFunc func(ctx context.Context, channelID string) ([]string, error)
+
 	// GetNewVideosFunc mocks the GetNewVideos method.
-	GetNewVideosFunc func(ctx context.Context, username string) ([]*models.Video, error)
+	GetNewVideosFunc func(ctx context.Context, username string) ([]models.Video, error)
+
+	// ListChannelsFunc mocks the ListChannels method.
+	ListChannelsFunc func(ctx context.Context) ([]models.Channel, error)
+
+	// SubscribeUserToChannelFunc mocks the SubscribeUserToChannel method.
+	SubscribeUserToChannelFunc func(ctx context.Context, username string, channelID string) error
+
+	// WatchVideoFunc mocks the WatchVideo method.
+	WatchVideoFunc func(ctx context.Context, username string, videoID string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// AuthenticateUser holds details about calls to the AuthenticateUser method.
-		AuthenticateUser []struct {
+		// AddVideoToUser holds details about calls to the AddVideoToUser method.
+		AddVideoToUser []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Username is the username argument value.
 			Username string
-			// Password is the password argument value.
-			Password string
+			// VideoID is the videoID argument value.
+			VideoID string
+		}
+		// AuthenticateUser holds details about calls to the AuthenticateUser method.
+		AuthenticateUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// User is the user argument value.
+			User models.User
+		}
+		// CreateChannel holds details about calls to the CreateChannel method.
+		CreateChannel []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Channel is the channel argument value.
+			Channel models.Channel
 		}
 		// CreateUser holds details about calls to the CreateUser method.
 		CreateUser []struct {
@@ -63,6 +125,29 @@ type DBMock struct {
 			// User is the user argument value.
 			User models.User
 		}
+		// CreateVideo holds details about calls to the CreateVideo method.
+		CreateVideo []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Video is the video argument value.
+			Video models.Video
+			// ChannelID is the channelID argument value.
+			ChannelID string
+		}
+		// DeleteUser holds details about calls to the DeleteUser method.
+		DeleteUser []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Username is the username argument value.
+			Username string
+		}
+		// GetChannelSubscribers holds details about calls to the GetChannelSubscribers method.
+		GetChannelSubscribers []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ChannelID is the channelID argument value.
+			ChannelID string
+		}
 		// GetNewVideos holds details about calls to the GetNewVideos method.
 		GetNewVideos []struct {
 			// Ctx is the ctx argument value.
@@ -70,30 +155,99 @@ type DBMock struct {
 			// Username is the username argument value.
 			Username string
 		}
+		// ListChannels holds details about calls to the ListChannels method.
+		ListChannels []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
+		// SubscribeUserToChannel holds details about calls to the SubscribeUserToChannel method.
+		SubscribeUserToChannel []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Username is the username argument value.
+			Username string
+			// ChannelID is the channelID argument value.
+			ChannelID string
+		}
+		// WatchVideo holds details about calls to the WatchVideo method.
+		WatchVideo []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Username is the username argument value.
+			Username string
+			// VideoID is the videoID argument value.
+			VideoID string
+		}
 	}
-	lockAuthenticateUser sync.RWMutex
-	lockCreateUser       sync.RWMutex
-	lockGetNewVideos     sync.RWMutex
+	lockAddVideoToUser         sync.RWMutex
+	lockAuthenticateUser       sync.RWMutex
+	lockCreateChannel          sync.RWMutex
+	lockCreateUser             sync.RWMutex
+	lockCreateVideo            sync.RWMutex
+	lockDeleteUser             sync.RWMutex
+	lockGetChannelSubscribers  sync.RWMutex
+	lockGetNewVideos           sync.RWMutex
+	lockListChannels           sync.RWMutex
+	lockSubscribeUserToChannel sync.RWMutex
+	lockWatchVideo             sync.RWMutex
 }
 
-// AuthenticateUser calls AuthenticateUserFunc.
-func (mock *DBMock) AuthenticateUser(ctx context.Context, username string, password string) (bool, error) {
-	if mock.AuthenticateUserFunc == nil {
-		panic("DBMock.AuthenticateUserFunc: method is nil but DB.AuthenticateUser was just called")
+// AddVideoToUser calls AddVideoToUserFunc.
+func (mock *DBMock) AddVideoToUser(ctx context.Context, username string, videoID string) error {
+	if mock.AddVideoToUserFunc == nil {
+		panic("DBMock.AddVideoToUserFunc: method is nil but DB.AddVideoToUser was just called")
 	}
 	callInfo := struct {
 		Ctx      context.Context
 		Username string
-		Password string
+		VideoID  string
 	}{
 		Ctx:      ctx,
 		Username: username,
-		Password: password,
+		VideoID:  videoID,
+	}
+	mock.lockAddVideoToUser.Lock()
+	mock.calls.AddVideoToUser = append(mock.calls.AddVideoToUser, callInfo)
+	mock.lockAddVideoToUser.Unlock()
+	return mock.AddVideoToUserFunc(ctx, username, videoID)
+}
+
+// AddVideoToUserCalls gets all the calls that were made to AddVideoToUser.
+// Check the length with:
+//
+//	len(mockedDB.AddVideoToUserCalls())
+func (mock *DBMock) AddVideoToUserCalls() []struct {
+	Ctx      context.Context
+	Username string
+	VideoID  string
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Username string
+		VideoID  string
+	}
+	mock.lockAddVideoToUser.RLock()
+	calls = mock.calls.AddVideoToUser
+	mock.lockAddVideoToUser.RUnlock()
+	return calls
+}
+
+// AuthenticateUser calls AuthenticateUserFunc.
+func (mock *DBMock) AuthenticateUser(ctx context.Context, user models.User) (bool, error) {
+	if mock.AuthenticateUserFunc == nil {
+		panic("DBMock.AuthenticateUserFunc: method is nil but DB.AuthenticateUser was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		User models.User
+	}{
+		Ctx:  ctx,
+		User: user,
 	}
 	mock.lockAuthenticateUser.Lock()
 	mock.calls.AuthenticateUser = append(mock.calls.AuthenticateUser, callInfo)
 	mock.lockAuthenticateUser.Unlock()
-	return mock.AuthenticateUserFunc(ctx, username, password)
+	return mock.AuthenticateUserFunc(ctx, user)
 }
 
 // AuthenticateUserCalls gets all the calls that were made to AuthenticateUser.
@@ -101,18 +255,52 @@ func (mock *DBMock) AuthenticateUser(ctx context.Context, username string, passw
 //
 //	len(mockedDB.AuthenticateUserCalls())
 func (mock *DBMock) AuthenticateUserCalls() []struct {
-	Ctx      context.Context
-	Username string
-	Password string
+	Ctx  context.Context
+	User models.User
 } {
 	var calls []struct {
-		Ctx      context.Context
-		Username string
-		Password string
+		Ctx  context.Context
+		User models.User
 	}
 	mock.lockAuthenticateUser.RLock()
 	calls = mock.calls.AuthenticateUser
 	mock.lockAuthenticateUser.RUnlock()
+	return calls
+}
+
+// CreateChannel calls CreateChannelFunc.
+func (mock *DBMock) CreateChannel(ctx context.Context, channel models.Channel) error {
+	if mock.CreateChannelFunc == nil {
+		panic("DBMock.CreateChannelFunc: method is nil but DB.CreateChannel was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		Channel models.Channel
+	}{
+		Ctx:     ctx,
+		Channel: channel,
+	}
+	mock.lockCreateChannel.Lock()
+	mock.calls.CreateChannel = append(mock.calls.CreateChannel, callInfo)
+	mock.lockCreateChannel.Unlock()
+	return mock.CreateChannelFunc(ctx, channel)
+}
+
+// CreateChannelCalls gets all the calls that were made to CreateChannel.
+// Check the length with:
+//
+//	len(mockedDB.CreateChannelCalls())
+func (mock *DBMock) CreateChannelCalls() []struct {
+	Ctx     context.Context
+	Channel models.Channel
+} {
+	var calls []struct {
+		Ctx     context.Context
+		Channel models.Channel
+	}
+	mock.lockCreateChannel.RLock()
+	calls = mock.calls.CreateChannel
+	mock.lockCreateChannel.RUnlock()
 	return calls
 }
 
@@ -152,8 +340,120 @@ func (mock *DBMock) CreateUserCalls() []struct {
 	return calls
 }
 
+// CreateVideo calls CreateVideoFunc.
+func (mock *DBMock) CreateVideo(ctx context.Context, video models.Video, channelID string) error {
+	if mock.CreateVideoFunc == nil {
+		panic("DBMock.CreateVideoFunc: method is nil but DB.CreateVideo was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		Video     models.Video
+		ChannelID string
+	}{
+		Ctx:       ctx,
+		Video:     video,
+		ChannelID: channelID,
+	}
+	mock.lockCreateVideo.Lock()
+	mock.calls.CreateVideo = append(mock.calls.CreateVideo, callInfo)
+	mock.lockCreateVideo.Unlock()
+	return mock.CreateVideoFunc(ctx, video, channelID)
+}
+
+// CreateVideoCalls gets all the calls that were made to CreateVideo.
+// Check the length with:
+//
+//	len(mockedDB.CreateVideoCalls())
+func (mock *DBMock) CreateVideoCalls() []struct {
+	Ctx       context.Context
+	Video     models.Video
+	ChannelID string
+} {
+	var calls []struct {
+		Ctx       context.Context
+		Video     models.Video
+		ChannelID string
+	}
+	mock.lockCreateVideo.RLock()
+	calls = mock.calls.CreateVideo
+	mock.lockCreateVideo.RUnlock()
+	return calls
+}
+
+// DeleteUser calls DeleteUserFunc.
+func (mock *DBMock) DeleteUser(ctx context.Context, username string) error {
+	if mock.DeleteUserFunc == nil {
+		panic("DBMock.DeleteUserFunc: method is nil but DB.DeleteUser was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Username string
+	}{
+		Ctx:      ctx,
+		Username: username,
+	}
+	mock.lockDeleteUser.Lock()
+	mock.calls.DeleteUser = append(mock.calls.DeleteUser, callInfo)
+	mock.lockDeleteUser.Unlock()
+	return mock.DeleteUserFunc(ctx, username)
+}
+
+// DeleteUserCalls gets all the calls that were made to DeleteUser.
+// Check the length with:
+//
+//	len(mockedDB.DeleteUserCalls())
+func (mock *DBMock) DeleteUserCalls() []struct {
+	Ctx      context.Context
+	Username string
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Username string
+	}
+	mock.lockDeleteUser.RLock()
+	calls = mock.calls.DeleteUser
+	mock.lockDeleteUser.RUnlock()
+	return calls
+}
+
+// GetChannelSubscribers calls GetChannelSubscribersFunc.
+func (mock *DBMock) GetChannelSubscribers(ctx context.Context, channelID string) ([]string, error) {
+	if mock.GetChannelSubscribersFunc == nil {
+		panic("DBMock.GetChannelSubscribersFunc: method is nil but DB.GetChannelSubscribers was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		ChannelID string
+	}{
+		Ctx:       ctx,
+		ChannelID: channelID,
+	}
+	mock.lockGetChannelSubscribers.Lock()
+	mock.calls.GetChannelSubscribers = append(mock.calls.GetChannelSubscribers, callInfo)
+	mock.lockGetChannelSubscribers.Unlock()
+	return mock.GetChannelSubscribersFunc(ctx, channelID)
+}
+
+// GetChannelSubscribersCalls gets all the calls that were made to GetChannelSubscribers.
+// Check the length with:
+//
+//	len(mockedDB.GetChannelSubscribersCalls())
+func (mock *DBMock) GetChannelSubscribersCalls() []struct {
+	Ctx       context.Context
+	ChannelID string
+} {
+	var calls []struct {
+		Ctx       context.Context
+		ChannelID string
+	}
+	mock.lockGetChannelSubscribers.RLock()
+	calls = mock.calls.GetChannelSubscribers
+	mock.lockGetChannelSubscribers.RUnlock()
+	return calls
+}
+
 // GetNewVideos calls GetNewVideosFunc.
-func (mock *DBMock) GetNewVideos(ctx context.Context, username string) ([]*models.Video, error) {
+func (mock *DBMock) GetNewVideos(ctx context.Context, username string) ([]models.Video, error) {
 	if mock.GetNewVideosFunc == nil {
 		panic("DBMock.GetNewVideosFunc: method is nil but DB.GetNewVideos was just called")
 	}
@@ -185,5 +485,117 @@ func (mock *DBMock) GetNewVideosCalls() []struct {
 	mock.lockGetNewVideos.RLock()
 	calls = mock.calls.GetNewVideos
 	mock.lockGetNewVideos.RUnlock()
+	return calls
+}
+
+// ListChannels calls ListChannelsFunc.
+func (mock *DBMock) ListChannels(ctx context.Context) ([]models.Channel, error) {
+	if mock.ListChannelsFunc == nil {
+		panic("DBMock.ListChannelsFunc: method is nil but DB.ListChannels was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockListChannels.Lock()
+	mock.calls.ListChannels = append(mock.calls.ListChannels, callInfo)
+	mock.lockListChannels.Unlock()
+	return mock.ListChannelsFunc(ctx)
+}
+
+// ListChannelsCalls gets all the calls that were made to ListChannels.
+// Check the length with:
+//
+//	len(mockedDB.ListChannelsCalls())
+func (mock *DBMock) ListChannelsCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockListChannels.RLock()
+	calls = mock.calls.ListChannels
+	mock.lockListChannels.RUnlock()
+	return calls
+}
+
+// SubscribeUserToChannel calls SubscribeUserToChannelFunc.
+func (mock *DBMock) SubscribeUserToChannel(ctx context.Context, username string, channelID string) error {
+	if mock.SubscribeUserToChannelFunc == nil {
+		panic("DBMock.SubscribeUserToChannelFunc: method is nil but DB.SubscribeUserToChannel was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		Username  string
+		ChannelID string
+	}{
+		Ctx:       ctx,
+		Username:  username,
+		ChannelID: channelID,
+	}
+	mock.lockSubscribeUserToChannel.Lock()
+	mock.calls.SubscribeUserToChannel = append(mock.calls.SubscribeUserToChannel, callInfo)
+	mock.lockSubscribeUserToChannel.Unlock()
+	return mock.SubscribeUserToChannelFunc(ctx, username, channelID)
+}
+
+// SubscribeUserToChannelCalls gets all the calls that were made to SubscribeUserToChannel.
+// Check the length with:
+//
+//	len(mockedDB.SubscribeUserToChannelCalls())
+func (mock *DBMock) SubscribeUserToChannelCalls() []struct {
+	Ctx       context.Context
+	Username  string
+	ChannelID string
+} {
+	var calls []struct {
+		Ctx       context.Context
+		Username  string
+		ChannelID string
+	}
+	mock.lockSubscribeUserToChannel.RLock()
+	calls = mock.calls.SubscribeUserToChannel
+	mock.lockSubscribeUserToChannel.RUnlock()
+	return calls
+}
+
+// WatchVideo calls WatchVideoFunc.
+func (mock *DBMock) WatchVideo(ctx context.Context, username string, videoID string) error {
+	if mock.WatchVideoFunc == nil {
+		panic("DBMock.WatchVideoFunc: method is nil but DB.WatchVideo was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Username string
+		VideoID  string
+	}{
+		Ctx:      ctx,
+		Username: username,
+		VideoID:  videoID,
+	}
+	mock.lockWatchVideo.Lock()
+	mock.calls.WatchVideo = append(mock.calls.WatchVideo, callInfo)
+	mock.lockWatchVideo.Unlock()
+	return mock.WatchVideoFunc(ctx, username, videoID)
+}
+
+// WatchVideoCalls gets all the calls that were made to WatchVideo.
+// Check the length with:
+//
+//	len(mockedDB.WatchVideoCalls())
+func (mock *DBMock) WatchVideoCalls() []struct {
+	Ctx      context.Context
+	Username string
+	VideoID  string
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Username string
+		VideoID  string
+	}
+	mock.lockWatchVideo.RLock()
+	calls = mock.calls.WatchVideo
+	mock.lockWatchVideo.RUnlock()
 	return calls
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/db"
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
 
 // AuthMiddleware will authenticate against a static API key
@@ -16,7 +17,11 @@ func AuthMiddleware(db db.DB) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid basic auth header"})
 			return
 		}
-		authenticated, err := db.AuthenticateUser(c.Request.Context(), username, password)
+		user := models.User{
+			Username: username,
+			Password: password,
+		}
+		authenticated, err := db.AuthenticateUser(c.Request.Context(), user)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 			return

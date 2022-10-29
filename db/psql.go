@@ -9,18 +9,18 @@ import (
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
 )
 
-type psqlDB struct {
+type postgresDB struct {
 	l  log.Logger
 	db *sql.DB
 }
 
-func NewPSQLDB(log log.Logger, dbCfg ytrssilConfig.DB) (*psqlDB, error) {
+func NewPostgresDB(log log.Logger, dbCfg ytrssilConfig.DB) (*postgresDB, error) {
 	db, err := sql.Open("postgres", dbCfg.DBURI)
 	if err != nil {
 		return nil, err
 	}
 
-	return &psqlDB{
+	return &postgresDB{
 		l:  log,
 		db: db,
 	}, nil

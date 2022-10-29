@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +18,7 @@ import (
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/httpserver/auth"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/httpserver/ytrssil"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
 
 var testConfig config.Config
@@ -23,12 +27,12 @@ func init() {
 	testConfig = config.TestConfig()
 }
 
-func setupTestServer(t *testing.T, authEnabled bool) *http.Server {
+func setupTestServer(t *testing.T, authEnabled bool) (*http.Server, db.DB) {
 	l := log.NewNopLogger()
 
-	db, err := db.NewPSQLDB(l, testConfig.DB)
+	db, err := db.NewPostgresDB(l, testConfig.DB)
 	if !assert.NoError(t, err) {
-		return nil
+		return nil, nil
 	}
 
 	handler := handler.New(l, db)
@@ -39,17 +43,17 @@ func setupTestServer(t *testing.T, authEnabled bool) *http.Server {
 		auth.AuthMiddleware(db),
 	)
 	if !assert.NoError(t, err) {
-		return nil
+		return nil, nil
 	}
 
 	return &http.Server{
 		Addr:    fmt.Sprintf(":%v", testConfig.Gin.Port),
 		Handler: router,
-	}
+	}, db
 }
 
 func TestHealthz(t *testing.T) {
-	server := setupTestServer(t, false)
+	server, _ := setupTestServer(t, false)
 	if !assert.NotNil(t, server) {
 		return
 	}
@@ -60,4 +64,25 @@ func TestHealthz(t *testing.T) {
 
 	assert.Equal(t, 200, w.Code)
 	assert.Equal(t, "healthy", w.Body.String())
+}
+
+func TestCreateUser(t *testing.T) {
+	server, db := setupTestServer(t, false)
+	if !assert.NotNil(t, server) {
+		return
+	}
+
+	jsonData, err := json.Marshal(models.User{Username: "test", Password: "test"})
+	if !assert.Nil(t, err) {
+		return
+	}
+	data := bytes.NewBuffer(jsonData)
+	req, _ := http.NewRequest("POST", "/register", data)
+	w := httptest.NewRecorder()
+	server.Handler.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, `{"msg":"user created"}`, w.Body.String())
+
+	db.DeleteUser(context.TODO(), "test")
 }
