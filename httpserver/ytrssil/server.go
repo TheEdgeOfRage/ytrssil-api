@@ -43,8 +43,11 @@ func SetupGinRouter(l log.Logger, handler handler.Handler, authMiddleware func(c
 	api := engine.Group("/api")
 	api.Use(authMiddleware)
 	{
-		api.GET("videos/new", srv.GetNewVideos)
 		api.POST("channels/:channel_id/subscribe", srv.SubscribeToChannel)
+		api.GET("videos/new", srv.GetNewVideos)
+		api.GET("videos/watched", srv.GetWatchedVideos)
+		api.POST("videos/:video_id/watch", srv.MarkVideoAsWatched)
+		api.POST("videos/:video_id/unwatch", srv.MarkVideoAsUnwatched)
 	}
 
 	return engine, nil

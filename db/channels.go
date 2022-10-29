@@ -73,3 +73,20 @@ func (d *postgresDB) GetChannelSubscribers(ctx context.Context, channelID string
 
 	return subs, nil
 }
+
+var subscribeUserToChannelQuery = `INSERT INTO user_subscriptions (username, channel_id) VALUES ($1, $2)`
+
+func (d *postgresDB) SubscribeUserToChannel(ctx context.Context, username string, channelID string) error {
+	_, err := d.db.ExecContext(ctx, subscribeUserToChannelQuery, username, channelID)
+	if err != nil {
+		if pgerr, ok := err.(*pq.Error); ok {
+			if pgerr.Code == "23505" {
+				return ErrAlreadySubscribed
+			}
+		}
+		d.l.Log("level", "ERROR", "function", "db.SubscribeUserToChannel", "error", err)
+		return err
+	}
+
+	return nil
+}
