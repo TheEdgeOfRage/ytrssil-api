@@ -10,7 +10,7 @@ RUN make setup
 COPY . /app/
 RUN make build
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim AS api
 RUN apt update \
 	&& apt install -y ca-certificates \
 	&& apt clean \
@@ -18,3 +18,6 @@ RUN apt update \
 
 COPY --from=builder /app/dist/ /app/
 ENTRYPOINT ["/app/ytrssil-api"]
+
+FROM migrate/migrate AS migrations
+COPY ./migrations/ /migrations/

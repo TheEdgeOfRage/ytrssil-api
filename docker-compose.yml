@@ -17,7 +17,7 @@ services:
       retries: 5
 
   api:
-    build: .
+    image: theedgeofrage/ytrssil:api
     restart: unless-stopped
     depends_on:
       - postgres
@@ -31,6 +31,17 @@ services:
       interval: 5s
       retries: 5
       timeout: 2s
+
+  migrations:
+    image: theedgeofrage/ytrssil:migrations
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    command:
+      - "-path=/migrations/"
+      - "-database"
+      - "postgresql://ytrssil:ytrssil@postgres/ytrssil?sslmode=disable"
+      - "up"
 
 volumes:
   postgres-data:

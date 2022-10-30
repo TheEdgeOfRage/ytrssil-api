@@ -5,9 +5,11 @@
 !cmd
 !config
 !db
+!feedparser
 !handler
 !httpserver
 !lib
+!migrations
 !mocks
 !models
 

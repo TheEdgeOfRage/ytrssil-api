@@ -1,4 +1,4 @@
-.PHONY: all setup ytrssil-api build lint k8s-lint yamllint test test-initdb image-build
+.PHONY: all setup ytrssil-api build gen-mocks lint yamllint test migrate image-build image-push
 
 DB_URI ?= postgres://ytrssil:ytrssil@localhost:5431/ytrssil?sslmode=disable
 
@@ -37,4 +37,10 @@ migrate:
 
 image-build:
 	@echo "# Building docker image..."
-	docker build -t ytrssil-api -f Dockerfile .
+	docker build -t theedgeofrage/ytrssil:api --target api .
+	docker build -t theedgeofrage/ytrssil:migrations --target migrations .
+
+image-push: image-build
+	@echo "# Pushing docker image..."
+	docker push theedgeofrage/ytrssil:api
+	docker push theedgeofrage/ytrssil:migrations
