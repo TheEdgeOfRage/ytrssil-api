@@ -67,7 +67,7 @@ var getWatchedVideosQuery = `
 		1=1
 		AND watch_timestamp IS NOT NULL
 		AND username=$1
-	ORDER BY watch_timestamp ASC
+	ORDER BY watch_timestamp DESC
 `
 
 func (d *postgresDB) GetWatchedVideos(ctx context.Context, username string) ([]models.Video, error) {
