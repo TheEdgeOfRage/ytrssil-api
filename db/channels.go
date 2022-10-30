@@ -90,3 +90,19 @@ func (d *postgresDB) SubscribeUserToChannel(ctx context.Context, username string
 
 	return nil
 }
+
+var unsubscribeUserFromChannelQuery = `DELETE FROM user_subscriptions WHERE username = $1 AND channel_id = $2`
+
+func (d *postgresDB) UnsubscribeUserFromChannel(ctx context.Context, username string, channelID string) error {
+	resp, err := d.db.ExecContext(ctx, unsubscribeUserFromChannelQuery, username, channelID)
+	if err != nil {
+		d.l.Log("level", "ERROR", "function", "db.SubscribeUserToChannel", "error", err)
+		return err
+	}
+
+	if affected, err := resp.RowsAffected(); err != nil || affected != 1 {
+		return ErrChannelNotFound
+	}
+
+	return nil
+}

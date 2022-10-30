@@ -57,6 +57,9 @@ var _ db.DB = &DBMock{}
 //			SubscribeUserToChannelFunc: func(ctx context.Context, username string, channelID string) error {
 //				panic("mock out the SubscribeUserToChannel method")
 //			},
+//			UnsubscribeUserFromChannelFunc: func(ctx context.Context, username string, channelID string) error {
+//				panic("mock out the UnsubscribeUserFromChannel method")
+//			},
 //		}
 //
 //		// use mockedDB in code that requires db.DB
@@ -99,6 +102,9 @@ type DBMock struct {
 
 	// SubscribeUserToChannelFunc mocks the SubscribeUserToChannel method.
 	SubscribeUserToChannelFunc func(ctx context.Context, username string, channelID string) error
+
+	// UnsubscribeUserFromChannelFunc mocks the UnsubscribeUserFromChannel method.
+	UnsubscribeUserFromChannelFunc func(ctx context.Context, username string, channelID string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -194,19 +200,29 @@ type DBMock struct {
 			// ChannelID is the channelID argument value.
 			ChannelID string
 		}
+		// UnsubscribeUserFromChannel holds details about calls to the UnsubscribeUserFromChannel method.
+		UnsubscribeUserFromChannel []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Username is the username argument value.
+			Username string
+			// ChannelID is the channelID argument value.
+			ChannelID string
+		}
 	}
-	lockAddVideo               sync.RWMutex
-	lockAddVideoToUser         sync.RWMutex
-	lockAuthenticateUser       sync.RWMutex
-	lockCreateChannel          sync.RWMutex
-	lockCreateUser             sync.RWMutex
-	lockDeleteUser             sync.RWMutex
-	lockGetChannelSubscribers  sync.RWMutex
-	lockGetNewVideos           sync.RWMutex
-	lockGetWatchedVideos       sync.RWMutex
-	lockListChannels           sync.RWMutex
-	lockSetVideoWatchTime      sync.RWMutex
-	lockSubscribeUserToChannel sync.RWMutex
+	lockAddVideo                   sync.RWMutex
+	lockAddVideoToUser             sync.RWMutex
+	lockAuthenticateUser           sync.RWMutex
+	lockCreateChannel              sync.RWMutex
+	lockCreateUser                 sync.RWMutex
+	lockDeleteUser                 sync.RWMutex
+	lockGetChannelSubscribers      sync.RWMutex
+	lockGetNewVideos               sync.RWMutex
+	lockGetWatchedVideos           sync.RWMutex
+	lockListChannels               sync.RWMutex
+	lockSetVideoWatchTime          sync.RWMutex
+	lockSubscribeUserToChannel     sync.RWMutex
+	lockUnsubscribeUserFromChannel sync.RWMutex
 }
 
 // AddVideo calls AddVideoFunc.
@@ -654,5 +670,45 @@ func (mock *DBMock) SubscribeUserToChannelCalls() []struct {
 	mock.lockSubscribeUserToChannel.RLock()
 	calls = mock.calls.SubscribeUserToChannel
 	mock.lockSubscribeUserToChannel.RUnlock()
+	return calls
+}
+
+// UnsubscribeUserFromChannel calls UnsubscribeUserFromChannelFunc.
+func (mock *DBMock) UnsubscribeUserFromChannel(ctx context.Context, username string, channelID string) error {
+	if mock.UnsubscribeUserFromChannelFunc == nil {
+		panic("DBMock.UnsubscribeUserFromChannelFunc: method is nil but DB.UnsubscribeUserFromChannel was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		Username  string
+		ChannelID string
+	}{
+		Ctx:       ctx,
+		Username:  username,
+		ChannelID: channelID,
+	}
+	mock.lockUnsubscribeUserFromChannel.Lock()
+	mock.calls.UnsubscribeUserFromChannel = append(mock.calls.UnsubscribeUserFromChannel, callInfo)
+	mock.lockUnsubscribeUserFromChannel.Unlock()
+	return mock.UnsubscribeUserFromChannelFunc(ctx, username, channelID)
+}
+
+// UnsubscribeUserFromChannelCalls gets all the calls that were made to UnsubscribeUserFromChannel.
+// Check the length with:
+//
+//	len(mockedDB.UnsubscribeUserFromChannelCalls())
+func (mock *DBMock) UnsubscribeUserFromChannelCalls() []struct {
+	Ctx       context.Context
+	Username  string
+	ChannelID string
+} {
+	var calls []struct {
+		Ctx       context.Context
+		Username  string
+		ChannelID string
+	}
+	mock.lockUnsubscribeUserFromChannel.RLock()
+	calls = mock.calls.UnsubscribeUserFromChannel
+	mock.lockUnsubscribeUserFromChannel.RUnlock()
 	return calls
 }

@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrChannelExists     = errors.New("channel already exists")
+	ErrChannelNotFound   = errors.New("no channel with that ID found")
 	ErrAlreadySubscribed = errors.New("already subscribed to channel")
 	ErrVideoExists       = errors.New("video already exists")
 	ErrUserExists        = errors.New("user already exists")
@@ -30,8 +31,10 @@ type DB interface {
 	ListChannels(ctx context.Context) ([]models.Channel, error)
 	// GetChannelSubscribers lists all channels from the database
 	GetChannelSubscribers(ctx context.Context, channelID string) ([]string, error)
-	// SubscribeUserToChannel will start showing new videos for that channel to the user
+	// SubscribeUserToChannel will start adding new videos from that channel to the user
 	SubscribeUserToChannel(ctx context.Context, username string, channelID string) error
+	// SubscribeUserToChannel will stop adding videos from that channel to the user
+	UnsubscribeUserFromChannel(ctx context.Context, username string, channelID string) error
 
 	// GetNewVideos returns a list of unwatched videos from all subscribed channels
 	GetNewVideos(ctx context.Context, username string) ([]models.Video, error)

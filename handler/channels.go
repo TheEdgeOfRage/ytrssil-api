@@ -27,3 +27,7 @@ func (h *handler) SubscribeToChannel(ctx context.Context, username string, chann
 
 	return h.db.SubscribeUserToChannel(ctx, username, channelID)
 }
+
+func (h *handler) UnsubscribeFromChannel(ctx context.Context, username string, channelID string) error {
+	return h.db.UnsubscribeUserFromChannel(ctx, username, channelID)
+}

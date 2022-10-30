@@ -44,6 +44,7 @@ func SetupGinRouter(l log.Logger, handler handler.Handler, authMiddleware func(c
 	api.Use(authMiddleware)
 	{
 		api.POST("channels/:channel_id/subscribe", srv.SubscribeToChannel)
+		api.POST("channels/:channel_id/unsubscribe", srv.UnsubscribeFromChannel)
 		api.GET("videos/new", srv.GetNewVideos)
 		api.GET("videos/watched", srv.GetWatchedVideos)
 		api.POST("videos/:video_id/watch", srv.MarkVideoAsWatched)

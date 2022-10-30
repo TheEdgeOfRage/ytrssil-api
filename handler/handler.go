@@ -11,6 +11,7 @@ import (
 type Handler interface {
 	CreateUser(ctx context.Context, user models.User) error
 	SubscribeToChannel(ctx context.Context, username string, channelID string) error
+	UnsubscribeFromChannel(ctx context.Context, username string, channelID string) error
 	GetNewVideos(ctx context.Context, username string) ([]models.Video, error)
 	GetWatchedVideos(ctx context.Context, username string) ([]models.Video, error)
 	FetchVideos(ctx context.Context) error

@@ -37,3 +37,26 @@ func (s *server) SubscribeToChannel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"msg": "subscribed to channel successfully"})
 }
+
+func (s *server) UnsubscribeFromChannel(c *gin.Context) {
+	var channel models.Channel
+	err := c.ShouldBindUri(&channel)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	username := c.GetString("username")
+
+	err = s.handler.UnsubscribeFromChannel(c.Request.Context(), username, channel.ID)
+	if err != nil {
+		if errors.Is(err, db.ErrChannelNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"msg": "unsubscribed from channel successfully"})
+}
