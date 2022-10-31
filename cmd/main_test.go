@@ -14,6 +14,7 @@ import (
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/config"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/db"
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/feedparser"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/handler"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/httpserver/auth"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/httpserver/ytrssil"
@@ -34,8 +35,8 @@ func setupTestServer(t *testing.T, authEnabled bool) (*http.Server, db.DB) {
 	if !assert.NoError(t, err) {
 		return nil, nil
 	}
-
-	handler := handler.New(l, db)
+	parser := feedparser.NewParser(l)
+	handler := handler.New(l, db, parser)
 	gin.SetMode(gin.TestMode)
 	router, err := ytrssil.SetupGinRouter(
 		l,

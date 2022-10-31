@@ -17,6 +17,7 @@ bin/moq:
 
 gen-mocks: bin/moq
 	./bin/moq -pkg db_mock -out ./mocks/db/db.go ./db DB
+	./bin/moq -pkg parser_mock -out ./mocks/feedparser/feedparser.go ./feedparser Parser
 	go fmt ./...
 
 bin/golangci-lint:

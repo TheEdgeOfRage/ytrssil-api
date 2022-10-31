@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/db"
@@ -37,7 +38,7 @@ func (h *handler) addVideoToAllSubscribers(ctx context.Context, channelID string
 	return nil
 }
 
-func (h *handler) fetchVideosForChannel(ctx context.Context, channelID string, parsedChannel *feedparser.Channel) {
+func (h *handler) addVideosForChannel(ctx context.Context, parsedChannel *feedparser.Channel) {
 	for _, parsedVideo := range parsedChannel.Videos {
 		date, err := parsedVideo.Published.Parse()
 		if err != nil {
@@ -45,20 +46,20 @@ func (h *handler) fetchVideosForChannel(ctx context.Context, channelID string, p
 			continue
 		}
 
-		id := strings.Split(parsedVideo.ID, ":")[2]
+		videoID := strings.Split(parsedVideo.ID, ":")[2]
 		video := models.Video{
-			ID:            id,
+			ID:            videoID,
 			Title:         parsedVideo.Title,
 			PublishedTime: date,
 		}
-		err = h.db.AddVideo(ctx, video, channelID)
+		err = h.db.AddVideo(ctx, video, parsedChannel.ID)
 		if err != nil {
 			if !errors.Is(err, db.ErrVideoExists) {
 				h.log.Log("level", "WARNING", "call", "db.AddVideo", "err", err)
 			}
 			continue
 		}
-		err = h.addVideoToAllSubscribers(ctx, channelID, id)
+		err = h.addVideoToAllSubscribers(ctx, parsedChannel.ID, videoID)
 		if err != nil {
 			continue
 		}
@@ -66,18 +67,29 @@ func (h *handler) fetchVideosForChannel(ctx context.Context, channelID string, p
 }
 
 func (h *handler) FetchVideos(ctx context.Context) error {
+	h.log.Log("level", "INFO", "msg", "fetching new videos for all channels")
+
 	channels, err := h.db.ListChannels(ctx)
 	if err != nil {
 		return err
 	}
-
+	var parsedChannels = make(chan *feedparser.Channel, len(channels))
+	var errors = make(chan error, len(channels))
+	var wg sync.WaitGroup
+	var mu sync.Mutex
 	for _, channel := range channels {
-		parsedChannel, err := feedparser.Parse(h.log, channel.ID)
+		wg.Add(1)
+		go h.parser.ParseThreadSafe(channel.ID, parsedChannels, errors, &mu, &wg)
+	}
+	wg.Wait()
+
+	for range channels {
+		parsedChannel := <-parsedChannels
+		err = <-errors
 		if err != nil {
 			continue
 		}
-
-		h.fetchVideosForChannel(ctx, channel.ID, parsedChannel)
+		h.addVideosForChannel(ctx, parsedChannel)
 	}
 
 	return nil

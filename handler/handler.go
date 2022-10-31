@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/db"
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/feedparser"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
@@ -20,10 +21,15 @@ type Handler interface {
 }
 
 type handler struct {
-	log log.Logger
-	db  db.DB
+	log    log.Logger
+	db     db.DB
+	parser feedparser.Parser
 }
 
-func New(log log.Logger, db db.DB) *handler {
-	return &handler{log: log, db: db}
+func New(log log.Logger, db db.DB, parser feedparser.Parser) *handler {
+	return &handler{
+		log:    log,
+		db:     db,
+		parser: parser,
+	}
 }

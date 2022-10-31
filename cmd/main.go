@@ -13,6 +13,7 @@ import (
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/config"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/db"
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/feedparser"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/handler"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/httpserver/auth"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/httpserver/ytrssil"
@@ -24,6 +25,16 @@ func init() {
 	time.Local = time.UTC
 }
 
+func fetcherRoutine(l log.Logger, h handler.Handler) {
+	for {
+		err := h.FetchVideos(context.Background())
+		if err != nil {
+			l.Log("level", "ERROR", "function", "main.fetcherRoutine", "call", "handler.FetchVideos", "err", err)
+		}
+		time.Sleep(5 * time.Minute)
+	}
+}
+
 func main() {
 	log := log.NewLogger()
 
@@ -32,14 +43,13 @@ func main() {
 		log.Log("level", "FATAL", "call", "config.Parse", "error", err)
 		return
 	}
-
 	db, err := db.NewPostgresDB(log, config.DB)
 	if err != nil {
 		log.Log("level", "FATAL", "call", "db.NewPostgresDB", "error", err)
 		return
 	}
-
-	handler := handler.New(log, db)
+	parser := feedparser.NewParser(log)
+	handler := handler.New(log, db, parser)
 	gin.SetMode(gin.ReleaseMode)
 	router, err := ytrssil.SetupGinRouter(
 		log,
@@ -78,6 +88,9 @@ func main() {
 			)
 		}
 	}()
+
+	// start periodic fetch videos routine
+	go fetcherRoutine(log, handler)
 
 	log.Log(
 		"level", "INFO",

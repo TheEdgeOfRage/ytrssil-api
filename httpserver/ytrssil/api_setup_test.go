@@ -28,7 +28,7 @@ func init() {
 func setupTestServer(t *testing.T) *http.Server {
 	l := log.NewNopLogger()
 
-	handler := handler.New(l, nil)
+	handler := handler.New(l, nil, nil)
 
 	gin.SetMode(gin.TestMode)
 	router, err := ytrssil.SetupGinRouter(

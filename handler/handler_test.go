@@ -10,6 +10,7 @@ import (
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/config"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
 	db_mock "gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/mocks/db"
+	parser_mock "gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/mocks/feedparser"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
 
@@ -35,7 +36,7 @@ func TestGetNewVideos(t *testing.T) {
 				},
 			}, nil
 		},
-	})
+	}, &parser_mock.ParserMock{})
 
 	// Act
 	resp, err := handler.GetNewVideos(context.TODO(), "username")

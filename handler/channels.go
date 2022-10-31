@@ -5,12 +5,11 @@ import (
 	"errors"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/db"
-	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/feedparser"
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
 
 func (h *handler) SubscribeToChannel(ctx context.Context, username string, channelID string) error {
-	parsedChannel, err := feedparser.Parse(h.log, channelID)
+	parsedChannel, err := h.parser.Parse(channelID)
 	if err != nil {
 		return err
 	}

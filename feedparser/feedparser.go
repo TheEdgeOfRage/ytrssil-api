@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
 	"github.com/paulrosania/go-charset/charset"
@@ -18,29 +19,31 @@ var (
 
 var urlFormat = "https://www.youtube.com/feeds/videos.xml?channel_id=%s"
 
-// Video struct for each video in the feed
-type Video struct {
-	ID        string `xml:"id"`
-	Title     string `xml:"title"`
-	Published Date   `xml:"published"`
+type Parser interface {
+	Parse(channelID string) (*Channel, error)
+	ParseThreadSafe(channelID string, channelChan chan *Channel, errChan chan error, mu *sync.Mutex, wg *sync.WaitGroup)
 }
 
-// Channel struct for RSS
-type Channel struct {
-	Name   string  `xml:"title"`
-	Videos []Video `xml:"entry"`
+type parser struct {
+	log log.Logger
 }
 
-func read(l log.Logger, url string) (io.ReadCloser, error) {
+func NewParser(l log.Logger) *parser {
+	return &parser{
+		log: l,
+	}
+}
+
+func (p *parser) fetch(url string) (io.ReadCloser, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		l.Log("level", "ERROR", "function", "feedparser.read", "call", "http.NewRequest", "error", err)
+		p.log.Log("level", "ERROR", "function", "feedparser.fetch", "call", "http.NewRequest", "error", err)
 		return nil, err
 	}
 
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		l.Log("level", "ERROR", "function", "feedparser.read", "call", "http.Do", "error", err)
+		p.log.Log("level", "ERROR", "function", "feedparser.fetch", "call", "http.Do", "error", err)
 		return nil, err
 	}
 
@@ -54,9 +57,9 @@ func read(l log.Logger, url string) (io.ReadCloser, error) {
 }
 
 // Parse parses a YouTube channel XML feed from a channel ID
-func Parse(l log.Logger, channelID string) (*Channel, error) {
+func (p *parser) Parse(channelID string) (*Channel, error) {
 	url := fmt.Sprintf(urlFormat, channelID)
-	reader, err := read(l, url)
+	reader, err := p.fetch(url)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +70,23 @@ func Parse(l log.Logger, channelID string) (*Channel, error) {
 
 	var channel Channel
 	if err := xmlDecoder.Decode(&channel); err != nil {
-		l.Log("level", "ERROR", "function", "feedparser.read", "call", "xml.Decode", "error", err)
+		p.log.Log("level", "ERROR", "function", "feedparser.Parse", "call", "xml.Decode", "error", err)
 		return nil, fmt.Errorf("%w: %s", ErrParseFailed, err.Error())
 	}
+	channel.ID = channelID
 	return &channel, nil
+}
+
+// ParseThreadSafe calls Parse, but additionally accepts an out parameter to store the result,
+// as well as a mutex and wait group to run multiple fetches in parallel
+func (p *parser) ParseThreadSafe(
+	channelID string, channelChan chan *Channel, errChan chan error, mu *sync.Mutex, wg *sync.WaitGroup,
+) {
+	channel, err := p.Parse(channelID)
+
+	mu.Lock()
+	channelChan <- channel
+	errChan <- err
+	mu.Unlock()
+	wg.Done()
 }
