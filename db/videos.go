@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
-	"github.com/lib/pq"
 )
 
 var getNewVideosQuery = `
@@ -98,24 +97,30 @@ func (d *postgresDB) GetWatchedVideos(ctx context.Context, username string) ([]m
 	return videos, nil
 }
 
-var addVideoQuery = `INSERT INTO videos (id, title, published_timestamp, channel_id) VALUES ($1, $2, $3, $4)`
+var addVideoQuery = `
+INSERT INTO videos (
+	id
+	, title
+	, published_timestamp
+	, channel_id
+) VALUES ($1, $2, $3, $4)
+ON CONFLICT DO NOTHING
+`
 
 func (d *postgresDB) AddVideo(ctx context.Context, video models.Video, channelID string) error {
-	_, err := d.db.ExecContext(ctx, addVideoQuery, video.ID, video.Title, video.PublishedTime, channelID)
+	resp, err := d.db.ExecContext(ctx, addVideoQuery, video.ID, video.Title, video.PublishedTime, channelID)
 	if err != nil {
-		if pgerr, ok := err.(*pq.Error); ok {
-			if pgerr.Code == "23505" {
-				return ErrVideoExists
-			}
-		}
 		d.l.Log("level", "ERROR", "function", "db.AddVideo", "call", "sql.Exec", "error", err)
 		return err
+	}
+	if affected, _ := resp.RowsAffected(); affected == 0 {
+		return ErrVideoExists
 	}
 
 	return nil
 }
 
-var addVideoToUserQuery = `INSERT INTO user_videos (username, video_id) VALUES ($1, $2)`
+var addVideoToUserQuery = `INSERT INTO user_videos (username, video_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`
 
 func (d *postgresDB) AddVideoToUser(ctx context.Context, username string, videoID string) error {
 	_, err := d.db.ExecContext(ctx, addVideoToUserQuery, username, videoID)

@@ -3,24 +3,19 @@ package db
 import (
 	"context"
 
-	"github.com/lib/pq"
-
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
 
-var createChannelQuery = `INSERT INTO channels (id, name) VALUES ($1, $2)`
+var createChannelQuery = `INSERT INTO channels (id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING`
 
 func (d *postgresDB) CreateChannel(ctx context.Context, channel models.Channel) error {
-	_, err := d.db.ExecContext(ctx, createChannelQuery, channel.ID, channel.Name)
+	resp, err := d.db.ExecContext(ctx, createChannelQuery, channel.ID, channel.Name)
 	if err != nil {
-		if pgerr, ok := err.(*pq.Error); ok {
-			if pgerr.Code == "23505" {
-				return ErrChannelExists
-			}
-		}
-
 		d.l.Log("level", "ERROR", "function", "db.CreateChannel", "error", err)
 		return err
+	}
+	if affected, _ := resp.RowsAffected(); affected == 0 {
+		return ErrChannelExists
 	}
 
 	return nil
@@ -74,18 +69,22 @@ func (d *postgresDB) GetChannelSubscribers(ctx context.Context, channelID string
 	return subs, nil
 }
 
-var subscribeUserToChannelQuery = `INSERT INTO user_subscriptions (username, channel_id) VALUES ($1, $2)`
+var subscribeUserToChannelQuery = `
+INSERT INTO user_subscriptions (
+	username
+	, channel_id
+) VALUES ($1, $2)
+ON CONFLICT DO NOTHING
+`
 
 func (d *postgresDB) SubscribeUserToChannel(ctx context.Context, username string, channelID string) error {
-	_, err := d.db.ExecContext(ctx, subscribeUserToChannelQuery, username, channelID)
+	resp, err := d.db.ExecContext(ctx, subscribeUserToChannelQuery, username, channelID)
 	if err != nil {
-		if pgerr, ok := err.(*pq.Error); ok {
-			if pgerr.Code == "23505" {
-				return ErrAlreadySubscribed
-			}
-		}
 		d.l.Log("level", "ERROR", "function", "db.SubscribeUserToChannel", "error", err)
 		return err
+	}
+	if affected, _ := resp.RowsAffected(); affected == 0 {
+		return ErrAlreadySubscribed
 	}
 
 	return nil

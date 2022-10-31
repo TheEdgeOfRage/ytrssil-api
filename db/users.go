@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/alexedwards/argon2id"
-	"github.com/lib/pq"
 
 	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
@@ -35,18 +34,17 @@ func (d *postgresDB) AuthenticateUser(ctx context.Context, user models.User) (bo
 	return match, nil
 }
 
-var createUserQuery = `INSERT INTO users (username, password) VALUES ($1, $2)`
+var createUserQuery = `INSERT INTO users (username, password) VALUES ($1, $2) ON CONFLICT DO NOTHING`
 
 func (d *postgresDB) CreateUser(ctx context.Context, user models.User) error {
-	_, err := d.db.ExecContext(ctx, createUserQuery, user.Username, user.Password)
+	resp, err := d.db.ExecContext(ctx, createUserQuery, user.Username, user.Password)
 	if err != nil {
-		if pgerr, ok := err.(*pq.Error); ok {
-			if pgerr.Code == "23505" {
-				return ErrUserExists
-			}
-		}
 		d.l.Log("level", "ERROR", "function", "db.CreateUser", "error", err)
 		return err
+	}
+
+	if affected, _ := resp.RowsAffected(); affected == 0 {
+		return ErrUserExists
 	}
 
 	return nil
