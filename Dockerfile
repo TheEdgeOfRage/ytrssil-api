@@ -1,16 +1,13 @@
-FROM golang:1.19-bullseye AS builder
-RUN apt update && apt install -y make
+FROM golang:1.24-trixie AS builder
 
-# first copy just enough to pull all dependencies, to cache this layer
-COPY go.mod go.sum Makefile /app/
+COPY go.mod go.sum /app/
 WORKDIR /app/
-RUN make setup
+RUN go mod download
 
-# lint, build, etc..
 COPY . /app/
-RUN make build
+RUN go build -o dist/ytrssil-api cmd/main.go
 
-FROM debian:bullseye-slim AS api
+FROM debian:trixie-slim AS api
 RUN apt update \
 	&& apt install -y ca-certificates curl \
 	&& apt clean \
