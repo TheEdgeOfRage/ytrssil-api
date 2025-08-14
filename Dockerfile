@@ -12,7 +12,7 @@ RUN make build
 
 FROM debian:bullseye-slim AS api
 RUN apt update \
-	&& apt install -y ca-certificates \
+	&& apt install -y ca-certificates curl \
 	&& apt clean \
 	&& rm -rf /var/lib/apt/lists/*
 
