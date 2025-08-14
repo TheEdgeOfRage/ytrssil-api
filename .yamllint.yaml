@@ -1,8 +1,0 @@
----
-extends: default
-# files managed by flux won't pass linting
-ignore: |
-  k8s/*/patches/deployment*
-  k8s/*/secrets/*
-rules:
-  line-length: disable

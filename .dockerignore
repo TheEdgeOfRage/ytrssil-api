@@ -1,18 +1,15 @@
-# Ignore everything and explicitly include the things we need
-*
-.*
+bin
+dist
 
-!cmd
-!config
-!db
-!feedparser
-!handler
-!httpserver
-!lib
-!migrations
-!mocks
-!models
+compose.yaml
+Dockerfile
+.dockerignore
 
-!go.mod
-!go.sum
-!Makefile
+.git
+.gitignore
+
+Makefile
+.golangci.yml
+
+LICENSE
+README.md

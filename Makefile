@@ -2,24 +2,8 @@
 
 DB_URI ?= postgres://ytrssil:ytrssil@localhost:5432/ytrssil?sslmode=disable
 
-all: lint test build
-
-setup: bin/golangci-lint
-	go mod download
-
-ytrssil-api:
-	go build -o dist/ytrssil-api cmd/main.go
-
-build: ytrssil-api
-
 bin/moq:
 	GOBIN=$(PWD)/bin go install github.com/matryer/moq@v0.5.3
-
-gen-mocks: bin/moq
-	./bin/moq -pkg db_mock -out ./mocks/db/db.go ./db DB
-	./bin/moq -pkg parser_mock -out ./mocks/feedparser/feedparser.go ./feedparser Parser
-	go fmt ./...
-
 bin/golangci-lint:
 	GOBIN=$(PWD)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.3.1
 bin/migrate: bin
@@ -35,15 +19,14 @@ test:
 	go mod tidy
 	go test -timeout=10s -race -benchmem ./...
 
+gen-mocks: bin/moq
+	./bin/moq -pkg db_mock -out ./mocks/db/db.go ./db DB
+	./bin/moq -pkg parser_mock -out ./mocks/feedparser/feedparser.go ./feedparser Parser
+	go fmt ./...
+
 migrate: bin/migrate
 	bin/migrate -database "$(DB_URI)" -path migrations up
 
 image-build:
-	@echo "# Building docker image..."
-	docker build -t theedgeofrage/ytrssil:api --target api .
-	docker build -t theedgeofrage/ytrssil:migrations --target migrations .
-
-image-push: image-build
-	@echo "# Pushing docker image..."
-	docker push theedgeofrage/ytrssil:api
-	docker push theedgeofrage/ytrssil:migrations
+	docker buildx build --push -t theedgeofrage/ytrssil:api --target api .
+	docker buildx build --push -t theedgeofrage/ytrssil:migrations --target migrations .
