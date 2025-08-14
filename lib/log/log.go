@@ -2,9 +2,8 @@ package log
 
 import (
 	"fmt"
-	"os"
-
 	stdlog "log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-kit/log"

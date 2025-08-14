@@ -1,6 +1,6 @@
 .PHONY: all setup ytrssil-api build gen-mocks lint yamllint test migrate image-build image-push
 
-DB_URI ?= postgres://ytrssil:ytrssil@localhost:5431/ytrssil?sslmode=disable
+DB_URI ?= postgres://ytrssil:ytrssil@localhost:5432/ytrssil?sslmode=disable
 
 all: lint test build
 
@@ -13,7 +13,7 @@ ytrssil-api:
 build: ytrssil-api
 
 bin/moq:
-	GOBIN=$(PWD)/bin go install github.com/matryer/moq@v0.2.7
+	GOBIN=$(PWD)/bin go install github.com/matryer/moq@v0.5.3
 
 gen-mocks: bin/moq
 	./bin/moq -pkg db_mock -out ./mocks/db/db.go ./db DB
@@ -21,20 +21,22 @@ gen-mocks: bin/moq
 	go fmt ./...
 
 bin/golangci-lint:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.48.0
+	GOBIN=$(PWD)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.3.1
+bin/migrate: bin
+	GOBIN=$(PWD)/bin go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.18.3
 
 lint: bin/golangci-lint
-	go fmt ./...
-	go vet ./...
-	bin/golangci-lint -c .golangci.yml run ./...
 	go mod tidy
+	go vet ./...
+	bin/golangci-lint -c .golangci.yml fmt ./...
+	bin/golangci-lint -c .golangci.yml run ./...
 
 test:
 	go mod tidy
 	go test -timeout=10s -race -benchmem ./...
 
-migrate:
-	migrate -database "$(DB_URI)" -path migrations up
+migrate: bin/migrate
+	bin/migrate -database "$(DB_URI)" -path migrations up
 
 image-build:
 	@echo "# Building docker image..."

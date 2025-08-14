@@ -3,8 +3,9 @@ package ytrssil
 import (
 	"net/http"
 
-	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 	"github.com/gin-gonic/gin"
+
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/models"
 )
 
 func (s *server) GetNewVideos(c *gin.Context) {

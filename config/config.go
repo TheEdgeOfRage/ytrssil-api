@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 
 	flags "github.com/jessevdk/go-flags"
 )
@@ -40,7 +41,10 @@ func Parse() (Config, error) {
 
 // TestConfig returns a mostly hardcoded configuration used for running tests
 func TestConfig() Config {
-	dbURI := getenvOrDefault("DB_URI", "postgres://ytrssil:ytrssil@postgres:5432/ytrssil")
+	dbURI := getenvOrDefault("DB_URI", "postgres://ytrssil:ytrssil@localhost:5432/ytrssil?sslmode=disable")
+	if !strings.Contains(dbURI, "sslmode") {
+		dbURI = dbURI + "?sslmode=disable"
+	}
 
 	gin := Gin{
 		Port: 8080,

@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
 	"github.com/paulrosania/go-charset/charset"
+
+	"gitea.theedgeofrage.com/TheEdgeOfRage/ytrssil-api/lib/log"
 )
 
 var (

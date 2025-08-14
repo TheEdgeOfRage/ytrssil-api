@@ -28,7 +28,7 @@ func init() {
 	testConfig = config.TestConfig()
 }
 
-func setupTestServer(t *testing.T, authEnabled bool) (*http.Server, db.DB) {
+func setupTestServer(t *testing.T) (*http.Server, db.DB) {
 	l := log.NewNopLogger()
 
 	db, err := db.NewPostgresDB(l, testConfig.DB)
@@ -54,7 +54,7 @@ func setupTestServer(t *testing.T, authEnabled bool) (*http.Server, db.DB) {
 }
 
 func TestHealthz(t *testing.T) {
-	server, _ := setupTestServer(t, false)
+	server, _ := setupTestServer(t)
 	if !assert.NotNil(t, server) {
 		return
 	}
@@ -68,7 +68,7 @@ func TestHealthz(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	server, db := setupTestServer(t, false)
+	server, db := setupTestServer(t)
 	if !assert.NotNil(t, server) {
 		return
 	}

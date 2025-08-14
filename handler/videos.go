@@ -73,8 +73,8 @@ func (h *handler) FetchVideos(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	var parsedChannels = make(chan *feedparser.Channel, len(channels))
-	var errors = make(chan error, len(channels))
+	parsedChannels := make(chan *feedparser.Channel, len(channels))
+	errors := make(chan error, len(channels))
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for _, channel := range channels {
